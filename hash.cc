@@ -24,6 +24,7 @@ namespace jnp1 {
         static std::unordered_map<unsigned long, unordered_set<std::vector<uint32_t>, hf> mapa;
         return mapa;
     }
+    //Nieprzetestowane jeszcze
     unsigned long hash_create(jnp1::hash_function_t x) {
         std::unordered_set<std::vector<uint32_t>, hf> zbiur(0, hf(x));
         mapa().insert(id, zbiur);
