@@ -26,6 +26,9 @@ namespace jnp1 {
     }
     unsigned long hash_create(jnp1::hash_function_t x) {
         std::unordered_set<std::vector<uint32_t>, hf> zbiur(0, hf(x));
+        mapa().insert(id, zbiur);
+        id()++;
+        return id();
     }
     void hash_delete(unsigned long) {
 
