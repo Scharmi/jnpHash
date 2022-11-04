@@ -24,9 +24,16 @@ namespace jnp1 {
         static std::unordered_map<unsigned long, std::unordered_set<std::vector<uint64_t>, hf> > mapa;
         return mapa;
     };
+    std::vector<uint64_t> arr_to_vec(uint64_t const * seq, size_t size){
+        std::vector<uint64_t> vec;
+        for(size_t i = 0 ; i < size ; i++)
+            vec.push_back(seq[i]);
+        return vec;
+    }
     //Nieprzetestowane jeszcze
     unsigned long hash_create(jnp1::hash_function_t x) {
         std::unordered_set<std::vector<uint64_t>, hf> zbiur(0, hf(x));
+        std::unordered_set<int> secior(0);
         mapa().insert({id(), zbiur});
         id()++;
         return id() - 1;
@@ -49,8 +56,14 @@ namespace jnp1 {
             return false;
         }
         else{
+            if(hash_test(id, seq, size) == true){
+                return false;
+            }
+            else{
+                (mapa())[id].insert(arr_to_vec(seq, size));
+                return true;
+            }
             //error tylko gdy cos nie powiedzie lub set ma juz ten hash(ciag)
-            return true;
         }
     }
     bool hash_remove(unsigned long id, uint64_t const * seq, size_t size) {
@@ -58,6 +71,13 @@ namespace jnp1 {
             return false;
         }
         else{
+            if(hash_test(id, seq, size) == false){
+                return false;
+            }
+            else{
+                (mapa())[id].erase(arr_to_vec(seq, size));
+                return true;
+            }
             //error tylko gdy cos nie powiedzie lub set nie ma tego hash(ciag)
             return true;
         }
@@ -72,17 +92,14 @@ namespace jnp1 {
             return false;
         }
         else{
-            // true gdy ma ten hash(ciag), false gdy nie ma hash(ciag)
-                // if( (mapa()[id]).find(seq,size) == (mapa()[id]).end() ){
-                //     return false;
-                // }
-                // else{
-                //     return true;
-                // }  //-> jakos tak, bo nie wiem jak sie odwolac do 'hasha'
-            return true;
+            if((mapa()[id]).find(arr_to_vec(seq, size)) == (mapa()[id]).end())
+                return false;
+            else
+                return true;
         }
     }
 }
+
 
 int main() {
     std::cout << "Hello World\n";
