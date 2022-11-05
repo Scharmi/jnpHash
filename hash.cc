@@ -37,6 +37,9 @@ namespace debugInfo {
     void idNonexist(const std::string &name, unsigned long id) {
         std::cerr << name << ": " << "hash table #" << id << " does not exist\n";
     }
+    void tableWasEmpty(const std::string &name, unsigned long id) {
+        std::cerr << name << ": " << "hash table #" << id << " was empty\n";
+    }
 };
 namespace jnp1 {
     unsigned long &id_global() {
@@ -132,6 +135,7 @@ namespace jnp1 {
     void hash_clear(unsigned long id) {
         debugInfo::functionCall("hash_clear", id);
         if(mapa().find(id) != mapa().end()){
+            if(map_find.size() == 0) debugInfo::tableWasEmpty("hash_clear", id);
             map_find.clear();
         }
         else {
