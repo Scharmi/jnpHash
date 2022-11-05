@@ -30,12 +30,12 @@ namespace debugInfo {
     std::cerr << name << ": " << "hash table #" << id;
     }
     void functionCall(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
-        std::cerr << name << ":" << "(" << id << ", ";
+        std::cerr << name << "(" << id << ", ";
         printArray(seq, size);
         std::cerr << ", " << size << ")\n";
     }
     void functionCall(const std::string &name, unsigned long id) {
-        std::cerr << name << ":" << "(" << id << ")\n";
+        std::cerr << name << "(" << id << ")\n";
     }
     void idNonexist(const std::string &name, unsigned long id) {
         printNameHashTable(name, id);
@@ -58,17 +58,40 @@ namespace debugInfo {
     void invalidPointer(const std::string &name) {
         std::cerr << name << ": invalid pointer (NULL)\n";
     }
-    void tableInserted(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+    void printTableState(const std::string &name, unsigned long id, uint64_t const * seq, size_t size, const std::string &property) {
         printNameHashTable(name, id);
         std::cerr << ", sequence ";
         printArray(seq, size);
-        std::cerr << " was inserted\n";
+        std::cerr << property << "\n";
+    }
+    void tableInserted(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printTableState(name, id, seq, size, " inserted");
+    }
+    void tableRemoved(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printTableState(name, id, seq, size, " removed");
     }
     void tableWasPresent(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printTableState(name, id, seq, size, " was present");
+    }
+    void tableWasNotPresent(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printTableState(name, id, seq, size, " was not present");
+    }
+    void tableIsPresent(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printTableState(name, id, seq, size, " is present");
+    }
+    void tableIsNotPresent(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printTableState(name, id, seq, size, " is not present");
+    }
+    void hashDeleted(const std::string &name, unsigned long id) {
         printNameHashTable(name, id);
-        std::cerr << ", sequence ";
-        printArray(seq, size);
-        std::cerr << " was present\n";
+        std::cerr << " deleted\n";
+    }
+    void hashCleared(const std::string &name, unsigned long id) {
+        printNameHashTable(name, id);
+        std::cerr << " cleared\n";
+    }
+    void invalidSize(const std::string &name, size_t size) {
+        std::cerr << name << ": invalid size (" << size << ")\n";
     }
 };
 namespace jnp1 {
@@ -110,6 +133,10 @@ namespace jnp1 {
     unsigned long hash_create(jnp1::hash_function_t x) {
         std::unordered_set<std::vector<uint64_t>, hf> zbiur(0, hf(x));
         std::unordered_set<int> secior(0);
+        if(debug) {
+            debugInfo::hashCreateStart(x);
+            debugInfo::hashCreated(id_global());
+        }
         mapa().insert({id_global(), zbiur});
         id_global()++;
         return id_global() - 1;
@@ -120,9 +147,15 @@ namespace jnp1 {
             debugInfo::functionCall("hash_delete", id);
         }
         bool success = mapa().erase(id);
-        if(!success && debug) {
-            debugInfo::idNonexist("hash_delete", id);
+        if(debug) {
+            if(success) {
+                debugInfo::hashDeleted("hash_delete", id);
+            }
+            else {
+                debugInfo::idNonexist("hash_delete", id);
+            }
         }
+
     }
     size_t hash_size(unsigned long id) {
         if(debug) {
@@ -130,12 +163,14 @@ namespace jnp1 {
         }
         if(mapa().find(id) == mapa().end()){
             //nie ma klucza
-            debugInfo::idNonexist("hash_size", id);
+            if(debug)
+                debugInfo::idNonexist("hash_size", id);
             return 0;
         }
         else{
             size_t size = map_find.size();
-            debugInfo::tableSize("hash_size", id, size);
+            if(debug)
+                debugInfo::tableSize("hash_size", id, size);
             return map_find.size();
         }
     }
@@ -143,6 +178,7 @@ namespace jnp1 {
         if(debug) {
             debugInfo::functionCall("hash_insert", id, seq, size);
             if(seq == NULL) debugInfo::invalidPointer("hash_insert");
+            if(size == 0) debugInfo::invalidSize("hash_insert", 0);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
@@ -164,16 +200,21 @@ namespace jnp1 {
         if(debug) {
             debugInfo::functionCall("hash_remove", id, seq, size);
             if(seq == NULL) debugInfo::invalidPointer("hash_remove");
+            if(size == 0) debugInfo::invalidSize("hash_remove", 0);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
         }
         else{
             if(hash_test_no_debug(id, seq, size) == false){
+                if(debug)
+                    debugInfo::tableWasNotPresent("hash_remove", id, seq, size);
                 return false;
             }
             else{
                 map_find.erase(arr_to_vec(seq, size));
+                if(debug)
+                    debugInfo::tableRemoved("hash_remove", id, seq, size);
                 return true;
             }
             //error tylko gdy cos nie powiedzie lub set nie ma tego hash(ciag)
@@ -184,6 +225,7 @@ namespace jnp1 {
         debugInfo::functionCall("hash_clear", id);
         if(mapa().find(id) != mapa().end()){
             if(map_find.size() == 0) debugInfo::tableWasEmpty("hash_clear", id);
+            else debugInfo::hashCleared("hash_clear", id);
             map_find.clear();
         }
         else {
@@ -194,7 +236,21 @@ namespace jnp1 {
         if(debug) {
             debugInfo::functionCall("hash_test", id, seq, size);
             if(seq == NULL) debugInfo::invalidPointer("hash_test");
+            if(size == 0) debugInfo::invalidSize("hash_test", 0);
         }
-        return hash_test_no_debug(id, seq, size);
+        if(hash_test_no_debug(id, seq, size)) {
+            if(debug) {
+                if((seq != NULL) && (size != 0))
+                debugInfo::tableIsPresent("hash_test", id, seq, size);
+            }
+            return true;
+        }
+        else {
+            if(debug) {
+                if((seq != NULL) && (size != 0))
+                debugInfo::tableIsNotPresent("hash_test", id, seq, size);
+            }
+            return false;
+        }
     }
 }
