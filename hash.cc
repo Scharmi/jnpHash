@@ -142,10 +142,7 @@ namespace jnp1 {
             debugInfo::idNonexist("hash_clear", id);
         }
     }
-    bool hash_test(unsigned long id, uint64_t const * seq, size_t size) {
-        if(debug) {
-            debugInfo::functionCall("hash_test", id, seq, size);
-        }
+    bool hash_test_no_debug(unsigned long id, uint64_t const * seq, size_t size) {
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
         }
@@ -155,5 +152,11 @@ namespace jnp1 {
             else
                 return true;
         }
+    }
+    bool hash_test(unsigned long id, uint64_t const * seq, size_t size) {
+        if(debug) {
+            debugInfo::functionCall("hash_test", id, seq, size);
+        }
+        return hash_test_no_debug(id, seq, size);
     }
 }
