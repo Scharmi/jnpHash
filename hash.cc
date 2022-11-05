@@ -131,6 +131,9 @@ namespace jnp1 {
     }
     // //Nieprzetestowane jeszcze
     unsigned long hash_create(jnp1::hash_function_t x) {
+        if(debug){
+            debugInfo::hashCreateStart(x);
+        }
         std::unordered_set<std::vector<uint64_t>, hf> zbiur(0, hf(x));
         std::unordered_set<int> secior(0);
         if(debug) {
@@ -139,6 +142,9 @@ namespace jnp1 {
         }
         mapa().insert({id_global(), zbiur});
         id_global()++;
+        if(debug){
+            debugInfo::hashCreated(id_global() - 1);
+        }
         return id_global() - 1;
         //niescislosc byla bo mapa na np. set ma id 0, a bylo zwracane 1
     }
