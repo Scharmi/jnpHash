@@ -136,10 +136,6 @@ namespace jnp1 {
         }
         std::unordered_set<std::vector<uint64_t>, hf> zbiur(0, hf(x));
         std::unordered_set<int> secior(0);
-        if(debug) {
-            debugInfo::hashCreateStart(x);
-            debugInfo::hashCreated(id_global());
-        }
         mapa().insert({id_global(), zbiur});
         id_global()++;
         if(debug){
