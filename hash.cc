@@ -112,9 +112,6 @@ namespace jnp1 {
         std::unordered_set<int> secior(0);
         mapa().insert({id_global(), zbiur});
         id_global()++;
-        if(debug){
-            debugInfo::hashCreated(id_global() - 1);
-        }
         return id_global() - 1;
         //niescislosc byla bo mapa na np. set ma id 0, a bylo zwracane 1
     }
