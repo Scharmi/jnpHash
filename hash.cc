@@ -40,6 +40,9 @@ namespace debugInfo {
     void tableWasEmpty(const std::string &name, unsigned long id) {
         std::cerr << name << ": " << "hash table #" << id << " was empty\n";
     }
+    void tableSize(const std::string &name, unsigned long id, size_t size) {
+        std::cerr << name << ": " << "hash table #" << id << " contains " << size << " element(s)\n";
+    }
 };
 namespace jnp1 {
     unsigned long &id_global() {
@@ -89,9 +92,12 @@ namespace jnp1 {
         }
         if(mapa().find(id) == mapa().end()){
             //nie ma klucza
+            debugInfo::idNonexist("hash_size", id);
             return 0;
         }
         else{
+            size_t size = map_find.size();
+            debugInfo::tableSize("hash_size", id, size);
             return map_find.size();
         }
     }
