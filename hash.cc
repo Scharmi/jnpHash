@@ -181,6 +181,7 @@ namespace jnp1 {
             debugInfo::functionCall("hash_insert", id, seq, size);
             if(seq == NULL) debugInfo::invalidPointer("hash_insert");
             if(size == 0) debugInfo::invalidSize("hash_insert", 0);
+            if(mapa().find(id) == mapa().end()) debugInfo::idNonexist("hash_insert", id);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
@@ -203,6 +204,7 @@ namespace jnp1 {
             debugInfo::functionCall("hash_remove", id, seq, size);
             if(seq == NULL) debugInfo::invalidPointer("hash_remove");
             if(size == 0) debugInfo::invalidSize("hash_remove", 0);
+            if(mapa().find(id) == mapa().end()) debugInfo::idNonexist("hash_remove", id);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
@@ -239,17 +241,19 @@ namespace jnp1 {
             debugInfo::functionCall("hash_test", id, seq, size);
             if(seq == NULL) debugInfo::invalidPointer("hash_test");
             if(size == 0) debugInfo::invalidSize("hash_test", 0);
+            if((seq != NULL) && (size != 0))
+                if(mapa().find(id) == mapa().end()) debugInfo::idNonexist("hash_test", id);
         }
         if(hash_test_no_debug(id, seq, size)) {
             if(debug) {
-                if((seq != NULL) && (size != 0))
+                if((seq != NULL) && (size != 0) && (mapa().find(id) != mapa().end()))
                 debugInfo::tableIsPresent("hash_test", id, seq, size);
             }
             return true;
         }
         else {
             if(debug) {
-                if((seq != NULL) && (size != 0))
+                if((seq != NULL) && (size != 0) && (mapa().find(id) != mapa().end()))
                 debugInfo::tableIsNotPresent("hash_test", id, seq, size);
             }
             return false;
