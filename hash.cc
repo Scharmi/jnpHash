@@ -26,6 +26,9 @@ namespace debugInfo {
             std::cerr << "NULL";
         }
     }
+    void printNameHashTable(const std::string &name, unsigned long id) {
+    std::cerr << name << ": " << "hash table #" << id;
+    }
     void functionCall(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
         std::cerr << name << ":" << "(" << id << ", ";
         printArray(seq, size);
@@ -35,13 +38,37 @@ namespace debugInfo {
         std::cerr << name << ":" << "(" << id << ")\n";
     }
     void idNonexist(const std::string &name, unsigned long id) {
-        std::cerr << name << ": " << "hash table #" << id << " does not exist\n";
+        printNameHashTable(name, id);
+        std::cerr << " does not exist\n";
     }
     void tableWasEmpty(const std::string &name, unsigned long id) {
-        std::cerr << name << ": " << "hash table #" << id << " was empty\n";
+        printNameHashTable(name, id);
+        std::cerr << " was empty\n";
     }
     void tableSize(const std::string &name, unsigned long id, size_t size) {
-        std::cerr << name << ": " << "hash table #" << id << " contains " << size << " element(s)\n";
+        printNameHashTable(name, id);
+        std::cerr << " contains " << size << " element(s)\n";
+    }
+    void hashCreated(unsigned long id){
+        std::cerr << "hash_create: hash table #" << id << " created\n";
+    }
+    void hashCreateStart(jnp1::hash_function_t x){
+        std::cerr << "hash_create(" << (void const *) x << ")\n";
+    }
+    void invalidPointer(const std::string &name) {
+        std::cerr << name << ": invalid pointer (NULL)\n";
+    }
+    void tableInserted(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printNameHashTable(name, id);
+        std::cerr << ", sequence ";
+        printArray(seq, size);
+        std::cerr << " was inserted\n";
+    }
+    void tableWasPresent(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+        printNameHashTable(name, id);
+        std::cerr << ", sequence ";
+        printArray(seq, size);
+        std::cerr << " was present\n";
     }
 };
 namespace jnp1 {
@@ -68,12 +95,26 @@ namespace jnp1 {
             vec.push_back(seq[i]);
         return vec;
     }
+    bool hash_test_no_debug(unsigned long id, uint64_t const * seq, size_t size) {
+        if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
+            return false;
+        }
+        else{
+            if(map_find.find(arr_to_vec(seq, size))  == map_find.end())
+                return false;
+            else
+                return true;
+        }
+    }
     // //Nieprzetestowane jeszcze
     unsigned long hash_create(jnp1::hash_function_t x) {
         std::unordered_set<std::vector<uint64_t>, hf> zbiur(0, hf(x));
         std::unordered_set<int> secior(0);
         mapa().insert({id_global(), zbiur});
         id_global()++;
+        if(debug){
+            debugInfo::hashCreated(id_global() - 1);
+        }
         return id_global() - 1;
         //niescislosc byla bo mapa na np. set ma id 0, a bylo zwracane 1
     }
@@ -104,16 +145,19 @@ namespace jnp1 {
     bool hash_insert(unsigned long id, uint64_t const * seq, size_t size) {
         if(debug) {
             debugInfo::functionCall("hash_insert", id, seq, size);
+            if(seq == NULL) debugInfo::invalidPointer("hash_insert");
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
         }
         else{
-            if(hash_test(id, seq, size) == true){
+            if(hash_test_no_debug(id, seq, size) == true){
+                debugInfo::tableWasPresent("hash_insert", id, seq, size);
                 return false;
             }
             else{
                 map_find.insert(arr_to_vec(seq, size));
+                debugInfo::tableInserted("hash_insert", id, seq, size);
                 return true;
             }
             //error tylko gdy cos nie powiedzie lub set ma juz ten hash(ciag)
@@ -122,12 +166,13 @@ namespace jnp1 {
     bool hash_remove(unsigned long id, uint64_t const * seq, size_t size) {
         if(debug) {
             debugInfo::functionCall("hash_remove", id, seq, size);
+            if(seq == NULL) debugInfo::invalidPointer("hash_remove");
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
         }
         else{
-            if(hash_test(id, seq, size) == false){
+            if(hash_test_no_debug(id, seq, size) == false){
                 return false;
             }
             else{
@@ -148,20 +193,10 @@ namespace jnp1 {
             debugInfo::idNonexist("hash_clear", id);
         }
     }
-    bool hash_test_no_debug(unsigned long id, uint64_t const * seq, size_t size) {
-        if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
-            return false;
-        }
-        else{
-            if(map_find.find(arr_to_vec(seq, size))  == map_find.end())
-                return false;
-            else
-                return true;
-        }
-    }
     bool hash_test(unsigned long id, uint64_t const * seq, size_t size) {
         if(debug) {
             debugInfo::functionCall("hash_test", id, seq, size);
+            if(seq == NULL) debugInfo::invalidPointer("hash_test");
         }
         return hash_test_no_debug(id, seq, size);
     }
