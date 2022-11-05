@@ -3,8 +3,9 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include <iostream>
+
 #ifdef __cplusplus 
+#include <iostream>
 namespace jnp1 {
 extern "C" {
 #endif
