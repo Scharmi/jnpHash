@@ -11,7 +11,7 @@ constexpr bool debug = false;
 #else
 constexpr bool debug = true;
 #endif
-#define map_find ((mapa().find(id))->second) //wskazuje set od id
+#define map_find ((mapa().find(id))->second)
 namespace debugInfo {
     void printArray(uint64_t const * arr, size_t size) {
         if(arr != NULL) {
@@ -43,6 +43,12 @@ namespace debugInfo {
     void tableSize(const std::string &name, unsigned long id, size_t size) {
         std::cerr << name << ": " << "hash table #" << id << " contains " << size << " element(s)\n";
     }
+    void hashCreated(unsigned long id){
+        std::cerr << "hash_create: hash table #" << id << " created\n";
+    }
+    void hashCreateStart(jnp1::hash_function_t x){
+        std::cerr << "hash_create(" << (void const *) x << ")\n";
+    }
 };
 namespace jnp1 {
     unsigned long &id_global() {
@@ -68,14 +74,17 @@ namespace jnp1 {
             vec.push_back(seq[i]);
         return vec;
     }
-    // //Nieprzetestowane jeszcze
     unsigned long hash_create(jnp1::hash_function_t x) {
-        std::unordered_set<std::vector<uint64_t>, hf> zbiur(0, hf(x));
-        std::unordered_set<int> secior(0);
-        mapa().insert({id_global(), zbiur});
+        if(debug){
+            debugInfo::hashCreateStart(x);
+        }
+        std::unordered_set<std::vector<uint64_t>, hf> newSet(0, hf(x));
+        mapa().insert({id_global(), newSet});
         id_global()++;
+        if(debug){
+            debugInfo::hashCreated(id_global() - 1);
+        }
         return id_global() - 1;
-        //niescislosc byla bo mapa na np. set ma id 0, a bylo zwracane 1
     }
     void hash_delete(unsigned long id) {
         if(debug) {
@@ -91,7 +100,6 @@ namespace jnp1 {
             debugInfo::functionCall("hash_size", id);
         }
         if(mapa().find(id) == mapa().end()){
-            //nie ma klucza
             debugInfo::idNonexist("hash_size", id);
             return 0;
         }
@@ -116,7 +124,6 @@ namespace jnp1 {
                 map_find.insert(arr_to_vec(seq, size));
                 return true;
             }
-            //error tylko gdy cos nie powiedzie lub set ma juz ten hash(ciag)
         }
     }
     bool hash_remove(unsigned long id, uint64_t const * seq, size_t size) {
@@ -134,7 +141,6 @@ namespace jnp1 {
                 map_find.erase(arr_to_vec(seq, size));
                 return true;
             }
-            //error tylko gdy cos nie powiedzie lub set nie ma tego hash(ciag)
             return true;
         }
     }
