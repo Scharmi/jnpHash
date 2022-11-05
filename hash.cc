@@ -26,13 +26,16 @@ namespace debugInfo {
             std::cerr << "NULL";
         }
     }
-    void printFunctionCall(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
+    void functionCall(const std::string &name, unsigned long id, uint64_t const * seq, size_t size) {
         std::cerr << name << ":" << "(" << id << ", ";
         printArray(seq, size);
         std::cerr << ", " << size << ")\n";
     }
-    void printFunctionCall(const std::string &name, unsigned long id) {
+    void functionCall(const std::string &name, unsigned long id) {
         std::cerr << name << ":" << "(" << id << ")\n";
+    }
+    void idNonexist(const std::string &name, unsigned long id) {
+        std::cerr << name << ": " << "hash table #" << id << " does not exist\n";
     }
 };
 namespace jnp1 {
@@ -70,13 +73,16 @@ namespace jnp1 {
     }
     void hash_delete(unsigned long id) {
         if(debug) {
-            debugInfo::printFunctionCall("hash_delete", id);
+            debugInfo::functionCall("hash_delete", id);
         }
-        mapa().erase(id);
+        bool success = mapa().erase(id);
+        if(!success && debug) {
+            debugInfo::idNonexist("hash_delete", id);
+        }
     }
     size_t hash_size(unsigned long id) {
         if(debug) {
-            debugInfo::printFunctionCall("hash_size", id);
+            debugInfo::functionCall("hash_size", id);
         }
         if(mapa().find(id) == mapa().end()){
             //nie ma klucza
@@ -88,7 +94,7 @@ namespace jnp1 {
     }
     bool hash_insert(unsigned long id, uint64_t const * seq, size_t size) {
         if(debug) {
-            debugInfo::printFunctionCall("hash_insert", id, seq, size);
+            debugInfo::functionCall("hash_insert", id, seq, size);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
@@ -106,7 +112,7 @@ namespace jnp1 {
     }
     bool hash_remove(unsigned long id, uint64_t const * seq, size_t size) {
         if(debug) {
-            debugInfo::printFunctionCall("hash_remove", id, seq, size);
+            debugInfo::functionCall("hash_remove", id, seq, size);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
@@ -124,13 +130,17 @@ namespace jnp1 {
         }
     }
     void hash_clear(unsigned long id) {
+        debugInfo::functionCall("hash_clear", id);
         if(mapa().find(id) != mapa().end()){
             map_find.clear();
+        }
+        else {
+            debugInfo::idNonexist("hash_clear", id);
         }
     }
     bool hash_test(unsigned long id, uint64_t const * seq, size_t size) {
         if(debug) {
-            debugInfo::printFunctionCall("hash_test", id, seq, size);
+            debugInfo::functionCall("hash_test", id, seq, size);
         }
         if(seq == NULL || mapa().find(id) == mapa().end() || size == 0){
             return false;
